@@ -1,6 +1,7 @@
 import { data } from "./data.js";
+let videoData = ['https://video-previews.elements.envatousercontent.com/c6ad3c14-4e72-4d1e-a65a-b899ca9f72d9/watermarked_preview/watermarked_preview.mp4']
 let arr = [...data]
-let filter = document.querySelectorAll("#filter h1")
+let tags = document.querySelectorAll("#filter h1")
 let menu = document.querySelector("#hamburger")
 let side = document.querySelector("aside")
 let flag = true
@@ -15,10 +16,9 @@ menu.addEventListener("click", (e) => {
     }
 })
 
-
 function createCard(e) {
-    document.querySelector("main").innerHTML += ` <div id="card" class="text-white cursor-pointer">
-            <figure class="rounded-2xl overflow-hidden relative">
+    document.querySelector("main").innerHTML += ` <div id="card" class="text-white cursor-pointer ">
+            <figure class="rounded-2xl overflow-hidden relative pointer-events-none">
                 <img src=${e.thumbnail}
                     alt="">
                 <p class="absolute right-0 bottom-0 bg-black/70 px-2 rounded">${e.duration || '20:15'}</p>
@@ -37,6 +37,7 @@ function createCard(e) {
             </div>
         </div>`
 }
+
 function updateCards(arr) {
     document.querySelector("main").innerHTML = ""
     arr.forEach((e, i) => {
@@ -46,6 +47,7 @@ function updateCards(arr) {
 updateCards(arr)
 
 function filterCards(value) {
+
     if (value === 'all' || value === 'home') {
         arr = data
     } else {
@@ -58,13 +60,14 @@ function filterCards(value) {
 
 document.querySelector("input").addEventListener("input", e => filterCards(e.target.value))
 
-filter.forEach(f => {
+tags.forEach(f => {
     f.addEventListener("click", (e) => {
         filterCards(e.target.textContent.toLocaleLowerCase().trim())
     })
 })
 
 function voiceSearch() {
+    
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     recognition.lang = "en-US"; // change to "hi-IN" for Hindi
@@ -81,7 +84,44 @@ function voiceSearch() {
     };
 
     recognition.onerror = (event) => {
-        console.log("Error:", event.error);
+        console.log("Error:", event);
     };
 }
 voiceSearch()
+
+
+// Event delegation for dynamically created cards
+document.querySelector("main").addEventListener("mouseover", function (e) {
+    // console.log('entered')
+    const c = e.target.closest("#card");
+    if (!c || !this.contains(c)) return;
+    if (c.querySelector("video")) return;
+    const img = c.querySelector("img");
+    if (c.dataset.video) videoSrc = c.dataset.video;
+    const video = document.createElement("video");
+    video.src = videoData[0];
+    video.autoplay = true;
+    video.muted = true;
+    video.loop = true;
+    video.playsInline = true;
+    video.style.position = "absolute";
+    video.style.top = 0;
+    video.style.left = 0;
+    video.style.width = "100%";
+    video.style.height = "100%";
+    video.style.objectFit = "cover";
+    video.style.zIndex = 2;
+    const fig = c.querySelector("figure");
+    fig.appendChild(video);
+    img.style.opacity = 0;
+}, true);
+
+document.querySelector("main").addEventListener("mouseleave", function (e) {
+    // console.log('leaved')
+    const c = e.target.closest("#card");
+    if (!c || !this.contains(c)) return;
+    const video = c.querySelector("video");
+    const img = c.querySelector("img");
+    if (video) video.remove();
+    if (img) img.style.opacity = 1;
+}, true);
